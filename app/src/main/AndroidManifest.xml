@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.videostream">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-feature android:name="android.hardware.camera.any" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
+        android:name=".VideoStreamApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.VideoStream">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".presentation.ui.LaunchActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,6 +27,11 @@
         </activity>
         <activity android:name=".ReceiveCallActivity" />
         <activity android:name=".MakeCallActivity" />
+        <activity android:name=".presentation.ui.ContactListActivity" />
+        <activity android:name=".presentation.ui.EnterNameActivity" />
+
+        <service android:name="com.example.videostream.service.NetworkMessagingService" />
+        <service android:name="com.example.videostream.service.AddressBroadcastService" />
     </application>
 
 </manifest>
