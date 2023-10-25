@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Video Stream</string>
+    <string name="add_contact_instructions">Have another app instance scan your QR code, or you can scan theirs.\nOnly one scan is needed.</string>
 </resources>

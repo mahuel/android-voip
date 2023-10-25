@@ -1,6 +1,5 @@
 package com.example.videostream.presentation.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,7 +16,6 @@ class ContactListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         notifyDataSetChanged()
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        Log.d("TEST123", "inflating")
         return ContactViewHolder(
             LayoutInflater.from(parent.context).inflate(R.layout.item_contact, parent, false)
         )

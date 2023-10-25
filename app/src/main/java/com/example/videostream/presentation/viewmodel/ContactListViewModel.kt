@@ -4,15 +4,20 @@ import android.app.Application
 import android.content.Intent
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import com.example.videostream.domain.model.Contact
 import com.example.videostream.perferences.VideoStreamPreferences
-import com.example.videostream.service.AddressBroadcastService
+import com.example.videostream.repository.ContactRepository
+import com.example.videostream.service.NetworkMessagingService
+import com.example.videostream.utils.getIpAddress
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class ContactListViewModel @Inject constructor(
     private val videoStreamPreferences: VideoStreamPreferences,
-    private val application: Application
+    private val application: Application,
+    private val contactRepository: ContactRepository
 ) : AndroidViewModel(application) {
 
     fun getDisplayName(): String? {
@@ -21,38 +26,31 @@ class ContactListViewModel @Inject constructor(
 
     fun signOut() {
         videoStreamPreferences.clearAll()
+        contactRepository.signOut()
     }
 
-    fun startAddressBroadcastService() {
+    fun getAddress(): String? {
+        return application.getIpAddress()?.hostAddress
+    }
+
+    fun getContacts(): LiveData<MutableList<Contact>> {
+        return contactRepository.getContactListLiveData()
+    }
+
+    fun startMessagingService() {
         application.applicationContext.apply {
-            val intent = Intent(this, AddressBroadcastService::class.java)
+            val intent2 = Intent(this, NetworkMessagingService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
+                startForegroundService(intent2)
             } else {
-                startService(intent)
+                startService(intent2)
             }
         }
-
-//        val address = Utils().getIpAddresses(application.applicationContext)
-//
-//        address?.let {
-//            application.applicationContext.apply {
-//                it.hostAddress?.let { ipAddress ->
-//                    val intent = Intent(this, AddressBroadcastService::class.java)
-//                    intent.putExtra(AddressBroadcastService.IP_ADDRESS, ipAddress)
-//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                        startForegroundService(intent)
-//                    } else {
-//                        startService(intent)
-//                    }
-//                }
-//            }
-//        }
     }
 
-    fun stopAddressBroadcastService() {
+    fun stopMessagingService() {
         application.applicationContext.apply {
-            stopService(Intent(this, AddressBroadcastService::class.java))
+            stopService(Intent(this, NetworkMessagingService::class.java))
         }
     }
 }

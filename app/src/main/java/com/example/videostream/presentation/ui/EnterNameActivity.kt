@@ -24,6 +24,7 @@ class EnterNameActivity : AppCompatActivity() {
             )
 
             if (result) {
+                finish()
                 this.startActivity(
                     Intent(
                         this,

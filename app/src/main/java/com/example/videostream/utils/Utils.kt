@@ -1,21 +1,16 @@
 package com.example.videostream.utils
 
-import android.content.Context
-import android.net.ConnectivityManager
-import java.net.Inet4Address
-import java.net.InetAddress
+import android.graphics.Bitmap
+import io.github.g0dkar.qrcode.QRCode
 
 
 class Utils {
 
-    fun getIpAddresses(context: Context): InetAddress?{
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val linkProperties = connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
-        linkProperties?.linkAddresses?.forEach {
-            if (it.address is Inet4Address) {
-                return it.address
-            }
+    companion object {
+        fun createQrCodeAsBitmap(data: String): Bitmap {
+            return QRCode(data).render(
+                margin = 10
+            ).nativeImage() as Bitmap
         }
-        return null
     }
 }

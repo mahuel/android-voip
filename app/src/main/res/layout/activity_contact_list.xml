@@ -6,34 +6,43 @@
     android:layout_height="match_parent"
     tools:context=".presentation.ui.ContactListActivity">
 
-    <TextView
-        android:id="@+id/headingTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
-        android:textSize="23sp"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/myToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+    <Button
+        android:id="@+id/addContactBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text="Add Contact"
         app:layout_constraintEnd_toStartOf="@id/signOutBtn"
-        tools:text="Hi User, here are you local contacts." />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/myToolbar" />
 
     <Button
         android:id="@+id/signOutBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Sign out"
+        app:layout_constraintBottom_toBottomOf="@id/addContactBtn"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="30dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/headingTextView"
-        app:layout_constraintStart_toEndOf="@id/headingTextView"
-        android:text="Sign out"/>
+        app:layout_constraintStart_toEndOf="@id/addContactBtn"
+        app:layout_constraintTop_toBottomOf="@id/myToolbar" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/headingTextView">
+        app:layout_constraintTop_toBottomOf="@id/addContactBtn">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/contactListRecyclerView"

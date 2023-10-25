@@ -3,25 +3,43 @@ package com.example.videostream.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Context
-import android.content.Intent
 import android.os.Build
-import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.LifecycleService
 import com.example.videostream.R
+import com.example.videostream.domain.model.Contact
+import com.example.videostream.repository.ContactRepository
+import com.example.videostream.service.TcpMessageHandler.Companion.GET_CONTACT_DETAILS
+import com.example.videostream.service.TcpMessageHandler.Companion.REMOVE_CONTACT
+import dagger.hilt.android.AndroidEntryPoint
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
+import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
+import kotlin.concurrent.thread
 
+@AndroidEntryPoint
+class NetworkMessagingService : LifecycleService() {
 
-class NetworkMessagingService: Service() {
+    companion object {
+        private const val TAG = "TEST123"
+        private const val PORT = 9876
+    }
+
+    @Inject
+    lateinit var contactRepository: ContactRepository
+
+    private val newAddresses: ArrayList<InetAddress> = ArrayList()
+
     private var serverSocket: ServerSocket? = null
     private val working = AtomicBoolean(true)
+    private var requestContactWorking = false
     private val runnable = Runnable {
         var socket: Socket? = null
         try {
@@ -30,12 +48,19 @@ class NetworkMessagingService: Service() {
                 if (serverSocket != null) {
                     socket = serverSocket!!.accept()
                     Log.i(TAG, "New client: $socket")
+                    contactRepository.addAddress(socket.inetAddress)
+
                     val dataInputStream = DataInputStream(socket.getInputStream())
                     val dataOutputStream = DataOutputStream(socket.getOutputStream())
 
                     // Use threads for each client to communicate with them simultaneously
-//                    val t: Thread = TcpClientHandler(dataInputStream, dataOutputStream)
-//                    t.start()
+                    val t: Thread = TcpMessageHandler(
+                        dataInputStream = dataInputStream,
+                        dataOutputStream = dataOutputStream,
+                        contactRepository = contactRepository,
+                        clientAddress = socket.inetAddress
+                    )
+                    t.start()
                 } else {
                     Log.e(TAG, "Couldn't create ServerSocket!")
                 }
@@ -50,44 +75,122 @@ class NetworkMessagingService: Service() {
         }
     }
 
-    override fun onBind(intent: Intent): IBinder? {
-        return null
-    }
-
     override fun onCreate() {
+        super.onCreate()
         startMeForeground()
         Thread(runnable).start()
+
+        contactRepository.getNewAddressLiveData().observe(this) {
+            Log.d(TAG, "getNewAddressLiveData")
+            requestContactDetails(it)
+        }
+
+        contactRepository.getSignOutLiveData().observe(this) {
+            Log.d(TAG, "getSignOutLiveData")
+            requestRemoveContacts(it)
+        }
+    }
+
+    private fun requestRemoveContacts(contacts: List<Contact>) {
+        thread(start = true) {
+            contacts.forEach {
+                Log.d(TAG, "request remove:${it.name} / ${it.address.hostName}")
+                makeRequest(
+                    address = it.address,
+                    request = REMOVE_CONTACT,
+                )
+            }
+        }
+    }
+
+    private fun requestContactDetails(address: InetAddress) {
+        newAddresses.add(address)
+        thread(start = true) {
+            if (requestContactWorking) {
+                return@thread
+            }
+
+            requestContactWorking = true
+            val addressesToQuery = newAddresses.toList()
+            newAddresses.clear()
+            addressesToQuery.forEach { queryAddress ->
+                Log.d(TAG, "querying address:${queryAddress.hostAddress}")
+
+                val contactName = makeRequest(
+                    address = queryAddress,
+                    request = GET_CONTACT_DETAILS,
+                )
+
+                contactName?.let {
+                    contactRepository.addContact(
+                        Contact(
+                            name = it,
+                            address = queryAddress
+                        )
+                    )
+                }
+            }
+            requestContactWorking = false
+        }
+    }
+
+    private fun makeRequest(address: InetAddress, request: String): String? {
+
+        val contactSocket = Socket(
+            address,
+            PORT
+        )
+
+        val bufferOutput = DataOutputStream(
+            contactSocket.getOutputStream()
+        )
+
+        val bufferInput = DataInputStream(
+            contactSocket.getInputStream()
+        )
+
+        bufferOutput.writeUTF(request)
+        var output:String? = ""
+        var working = true
+        while (working) {
+            output = bufferInput.readUTF()
+            if (output.isNotEmpty()) {
+                working = false
+            }
+        }
+        bufferOutput.close()
+        bufferInput.close()
+        contactSocket.close()
+        return output
     }
 
     override fun onDestroy() {
+        super.onDestroy()
         working.set(false)
     }
 
 
     private fun startMeForeground() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val NOTIFICATION_CHANNEL_ID = packageName
-            val channelName = "Tcp Server Background Service"
-            val chan = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE)
-//            chan.lightColor = Color.BLUE
-//            chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+            val NOTIFICATION_CHANNEL_ID = packageName + "networkMessaging"
+            val channelName = "Network Messaging Service"
+            val chan = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                channelName,
+                NotificationManager.IMPORTANCE_NONE
+            )
             val manager = (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
             manager.createNotificationChannel(chan)
             val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             val notification = notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Tcp Server is running in background")
+                .setContentTitle("Network messaging service is running")
                 .setPriority(NotificationManager.IMPORTANCE_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build()
-            startForeground(2, notification)
+            startForeground(4, notification)
         } else {
-            startForeground(1, Notification())
+            startForeground(3, Notification())
         }
-    }
-
-    companion object {
-        private val TAG = "TEST123"
-        private const val PORT = 9876
     }
 }

@@ -6,15 +6,15 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.videostream.databinding.ActivityContactListBinding
-import com.example.videostream.domain.model.Contact
 import com.example.videostream.presentation.adapter.ContactListAdapter
 import com.example.videostream.presentation.viewmodel.ContactListViewModel
+import com.example.videostream.utils.makeToast
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class ContactListActivity : AppCompatActivity(){
+class ContactListActivity : AppCompatActivity() {
 
-    private val contactListViewModel : ContactListViewModel by viewModels()
+    private val contactListViewModel: ContactListViewModel by viewModels()
 
     private val contactListAdapter = ContactListAdapter()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,10 +22,13 @@ class ContactListActivity : AppCompatActivity(){
 
         val binding: ActivityContactListBinding = ActivityContactListBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(binding.myToolbar)
+
 
         binding.signOutBtn.setOnClickListener {
             contactListViewModel.signOut()
-
+            contactListViewModel.stopMessagingService()
+            finish()
             this.startActivity(
                 Intent(
                     this,
@@ -34,10 +37,24 @@ class ContactListActivity : AppCompatActivity(){
             )
         }
 
+        binding.addContactBtn.setOnClickListener {
+            contactListViewModel.getAddress()?.also {
+                val fragment = AddContactBottomSheetFragment()
+                if (fragment.isAdded) {
+                    return@setOnClickListener
+                }
+                fragment.show(supportFragmentManager, "AddContact")
+            } ?: run {
+                this.makeToast(
+                    "Looks like your address is NOT Ipv4"
+                )
+            }
+        }
+
         val displayName = contactListViewModel.getDisplayName()
 
         displayName?.let {
-            binding.headingTextView.text = "Hi $it"
+            supportActionBar?.title = "Hi $it"
         }
 
         binding.contactListRecyclerView.apply {
@@ -45,28 +62,13 @@ class ContactListActivity : AppCompatActivity(){
             adapter = contactListAdapter
         }
 
-        contactListAdapter.addContacts(
-            arrayListOf<Contact>().apply {
-                add(Contact("allen"))
-                add(Contact("allen"))
-                add(Contact("allen"))
-                add(Contact("allen"))
-                add(Contact("allen"))
-                add(Contact("allen"))
-                add(Contact("allen"))
-                add(Contact("allen"))
-                add(Contact("allen"))
-            }
-        )
+        contactListViewModel.getContacts().observe(this) {
+            contactListAdapter.addContacts(it)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        contactListViewModel.startAddressBroadcastService()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        contactListViewModel.stopAddressBroadcastService()
+        contactListViewModel.startMessagingService()
     }
 }
