@@ -6,7 +6,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.videostream.databinding.ActivityContactListBinding
+import com.example.videostream.domain.model.Contact
 import com.example.videostream.presentation.adapter.ContactListAdapter
+import com.example.videostream.presentation.adapter.ContactListAdapterListener
+import com.example.videostream.presentation.viewmodel.CallViewModel
 import com.example.videostream.presentation.viewmodel.ContactListViewModel
 import com.example.videostream.utils.makeToast
 import dagger.hilt.android.AndroidEntryPoint
@@ -16,7 +19,20 @@ class ContactListActivity : AppCompatActivity() {
 
     private val contactListViewModel: ContactListViewModel by viewModels()
 
-    private val contactListAdapter = ContactListAdapter()
+    private val callViewModel: CallViewModel by viewModels()
+
+    private val contactListAdapter = ContactListAdapter(
+        getContactListListener()
+    )
+
+    companion object {
+        const val REJECT_EXTRA = "REJECT_EXTRA"
+    }
+
+    private val reject: Boolean by lazy {
+        intent?.extras?.getBoolean(REJECT_EXTRA) ?: false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -65,10 +81,28 @@ class ContactListActivity : AppCompatActivity() {
         contactListViewModel.getContacts().observe(this) {
             contactListAdapter.addContacts(it)
         }
+
+        callViewModel.getIncomingCalls().observe(this) {
+
+        }
+
+        if (reject) {
+            callViewModel.stopCall()
+        }
     }
 
     override fun onResume() {
         super.onResume()
         contactListViewModel.startMessagingService()
+    }
+
+    private fun getContactListListener() = object : ContactListAdapterListener {
+        override fun onCallPressed(contact: Contact) {
+            CallActivity.start(
+                activity = this@ContactListActivity,
+                contact = contact,
+                answerCall = false
+            )
+        }
     }
 }

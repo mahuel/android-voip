@@ -10,9 +10,13 @@ import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import com.example.videostream.R
 import com.example.videostream.domain.model.Contact
-import com.example.videostream.repository.ContactRepository
+import com.example.videostream.domain.repository.CallRepository
+import com.example.videostream.domain.repository.ContactRepository
+import com.example.videostream.service.TcpMessageHandler.Companion.CONNECT_CALL
 import com.example.videostream.service.TcpMessageHandler.Companion.GET_CONTACT_DETAILS
 import com.example.videostream.service.TcpMessageHandler.Companion.REMOVE_CONTACT
+import com.example.videostream.service.TcpMessageHandler.Companion.START_CALL
+import com.example.videostream.service.TcpMessageHandler.Companion.STOP_CALL
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -34,6 +38,9 @@ class NetworkMessagingService : LifecycleService() {
 
     @Inject
     lateinit var contactRepository: ContactRepository
+
+    @Inject
+    lateinit var callRepository: CallRepository
 
     private val newAddresses: ArrayList<InetAddress> = ArrayList()
 
@@ -58,6 +65,7 @@ class NetworkMessagingService : LifecycleService() {
                         dataInputStream = dataInputStream,
                         dataOutputStream = dataOutputStream,
                         contactRepository = contactRepository,
+                        callRepository = callRepository,
                         clientAddress = socket.inetAddress
                     )
                     t.start()
@@ -88,6 +96,48 @@ class NetworkMessagingService : LifecycleService() {
         contactRepository.getSignOutLiveData().observe(this) {
             Log.d(TAG, "getSignOutLiveData")
             requestRemoveContacts(it)
+        }
+
+        callRepository.getOutgoingCallLiveData().observe(this) {
+            Log.d(TAG, "getOutgoingCallLiveData")
+            requestCall(it)
+        }
+
+        callRepository.getConnectCallLiveData().observe(this) {
+            Log.d(TAG, "getConnectCallLiveData")
+            requestConnectCall(it)
+        }
+
+        callRepository.getStopCallLiveData().observe(this) {
+            Log.d(TAG, "getStopCallLiveData")
+            requestStopCall(it)
+        }
+    }
+
+    private fun requestStopCall(it: Contact) {
+        thread(start = true) {
+            makeRequest(
+                address = it.address,
+                request = STOP_CALL,
+            )
+        }
+    }
+
+    private fun requestConnectCall(it: InetAddress) {
+        thread(start = true) {
+            makeRequest(
+                address = it,
+                request = CONNECT_CALL,
+            )
+        }
+    }
+
+    private fun requestCall(contact: Contact) {
+        thread(start = true) {
+            makeRequest(
+                address = contact.address,
+                request = START_CALL,
+            )
         }
     }
 
@@ -153,9 +203,11 @@ class NetworkMessagingService : LifecycleService() {
         var output:String? = ""
         var working = true
         while (working) {
-            output = bufferInput.readUTF()
-            if (output.isNotEmpty()) {
-                working = false
+            if (bufferInput.available() > 0) {
+                output = bufferInput.readUTF()
+                if (output.isNotEmpty()) {
+                    working = false
+                }
             }
         }
         bufferOutput.close()

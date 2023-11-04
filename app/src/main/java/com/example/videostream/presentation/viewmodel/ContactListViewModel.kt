@@ -6,8 +6,8 @@ import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import com.example.videostream.domain.model.Contact
-import com.example.videostream.perferences.VideoStreamPreferences
-import com.example.videostream.repository.ContactRepository
+import com.example.videostream.domain.repository.ContactRepository
+import com.example.videostream.perferences.IVideoStreamPreferences
 import com.example.videostream.service.NetworkMessagingService
 import com.example.videostream.utils.getIpAddress
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,13 +15,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ContactListViewModel @Inject constructor(
-    private val videoStreamPreferences: VideoStreamPreferences,
+    private val videoStreamPreferences: IVideoStreamPreferences,
     private val application: Application,
     private val contactRepository: ContactRepository
 ) : AndroidViewModel(application) {
 
     fun getDisplayName(): String? {
-        return videoStreamPreferences.displayName
+        return videoStreamPreferences.getDisplayName()
     }
 
     fun signOut() {

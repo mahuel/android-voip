@@ -4,7 +4,7 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import com.example.videostream.repository.ContactRepository
+import com.example.videostream.domain.repository.ContactRepository
 import com.example.videostream.utils.Utils
 import com.example.videostream.utils.getIpAddress
 import dagger.hilt.android.lifecycle.HiltViewModel

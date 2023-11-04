@@ -3,6 +3,7 @@
     <uses-feature android:name="android.hardware.camera.any" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -25,12 +26,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ReceiveCallActivity" />
-        <activity android:name=".MakeCallActivity" />
         <activity android:name=".presentation.ui.ContactListActivity" />
         <activity android:name=".presentation.ui.EnterNameActivity" />
+        <activity android:name=".presentation.ui.CallActivity" />
 
         <service android:name="com.example.videostream.service.NetworkMessagingService" />
+        <service android:name="com.example.videostream.service.CallService" />
     </application>
 
 </manifest>

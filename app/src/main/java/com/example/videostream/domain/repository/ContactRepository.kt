@@ -1,16 +1,16 @@
-package com.example.videostream.repository
+package com.example.videostream.domain.repository
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.videostream.domain.model.Contact
-import com.example.videostream.perferences.VideoStreamPreferences
+import com.example.videostream.perferences.IVideoStreamPreferences
 import java.net.InetAddress
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ContactRepository @Inject constructor(
-    private val videoStreamPreferences: VideoStreamPreferences
+    private val videoStreamPreferences: IVideoStreamPreferences
 ) {
     private val contactList: MutableList<Contact> = mutableListOf()
 
@@ -57,11 +57,17 @@ class ContactRepository @Inject constructor(
     }
 
     fun detailsRequest(): String? {
-        return videoStreamPreferences.displayName
+        return videoStreamPreferences.getDisplayName()
     }
 
     fun signOut() {
         signOutLiveData.postValue(contactList.toList())
         contactList.clear()
+    }
+
+    fun getContactByAddress(clientAddress: InetAddress): Contact? {
+        return contactList.find {
+            it.address == clientAddress
+        }
     }
 }
