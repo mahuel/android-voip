@@ -6,6 +6,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -126,7 +128,31 @@ class CallService : LifecycleService() {
             answerIntent.putExtras(this)
         }
 
-        val notification = getNotificationBuilder()
+        val notificationChannelId = "com.example.videostream.incomingCall"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            val chan = NotificationChannel(
+                notificationChannelId,
+                "Incoming Call",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                val audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                    .build()
+
+                setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),
+                    audioAttributes
+                )
+                vibrationPattern = longArrayOf(1000, 1000)
+            }
+            manager.createNotificationChannel(chan)
+        } else {
+            startForeground(3, Notification())
+        }
+
+        val notification = NotificationCompat.Builder(this, notificationChannelId)
             .setOngoing(true)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setStyle(
@@ -137,6 +163,8 @@ class CallService : LifecycleService() {
                 )
             )
             .setAutoCancel(true)
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE))
+            .setVibrate(longArrayOf(1000, 1000))
             .setCategory(Notification.CATEGORY_CALL)
             .build()
 
