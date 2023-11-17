@@ -84,33 +84,22 @@ class CallService : LifecycleService() {
                     createPendingIntent(createHangUpIntent())
                 )
             )
+            .setContentIntent(openCallActivityPendingIntent())
+            .setFullScreenIntent(openCallActivityPendingIntent(), true)
             .setCategory(Notification.CATEGORY_CALL)
             .build()
         startForeground(NOTIFICATION_ID, notification)
     }
 
     private fun outgoingCall(contact: Contact) {
-        val clickIntent = Intent(
-            this,
-            CallActivity::class.java
-        )
-
-        Bundle().apply {
-            putString(CallActivity.NAME_EXTRA, contact.name)
-            putString(CallActivity.ADDRESS_EXTRA, contact.address.hostAddress)
-            putBoolean(CallActivity.ANSWER_EXTRA, false)
-            clickIntent.putExtras(this)
-        }
 
         val notification = getNotificationBuilder()
             .setOngoing(true)
             .setContentTitle("Calling ${contact.name}")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setCategory(Notification.CATEGORY_CALL)
-            .setFullScreenIntent(
-                createPendingIntent(clickIntent),
-                true
-            )
+            .setContentIntent(openCallActivityPendingIntent())
+            .setFullScreenIntent(openCallActivityPendingIntent(), true)
             .build()
         startForeground(NOTIFICATION_ID, notification)
     }
@@ -122,8 +111,6 @@ class CallService : LifecycleService() {
         )
 
         Bundle().apply {
-            putString(CallActivity.NAME_EXTRA, contact.name)
-            putString(CallActivity.ADDRESS_EXTRA, contact.address.hostAddress)
             putBoolean(CallActivity.ANSWER_EXTRA, true)
             answerIntent.putExtras(this)
         }
@@ -134,7 +121,7 @@ class CallService : LifecycleService() {
             val chan = NotificationChannel(
                 notificationChannelId,
                 "Incoming Call",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 val audioAttributes = AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -162,11 +149,15 @@ class CallService : LifecycleService() {
                     createPendingIntent(answerIntent)
                 )
             )
+            .setContentIntent(openCallActivityPendingIntent())
+            .setFullScreenIntent(openCallActivityPendingIntent(), true)
             .setAutoCancel(true)
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE))
             .setVibrate(longArrayOf(1000, 1000))
             .setCategory(Notification.CATEGORY_CALL)
             .build()
+
+        notification.flags = notification.flags or Notification.FLAG_INSISTENT
 
         startForeground(NOTIFICATION_ID, notification)
     }
@@ -190,6 +181,14 @@ class CallService : LifecycleService() {
             .setName(contact.name)
             .setImportant(true)
             .build()
+    }
+
+    private fun openCallActivityPendingIntent(): PendingIntent {
+        val openIntent = Intent(
+            this,
+            CallActivity::class.java
+        )
+        return createPendingIntent(openIntent)
     }
 
     private fun getNotificationBuilder(): NotificationCompat.Builder {

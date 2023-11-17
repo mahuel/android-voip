@@ -33,7 +33,6 @@ class NetworkMessagingService : LifecycleService() {
 
     companion object {
         private const val TAG = "TEST123"
-        private const val PORT = 9876
     }
 
     @Inject
@@ -41,6 +40,9 @@ class NetworkMessagingService : LifecycleService() {
 
     @Inject
     lateinit var callRepository: CallRepository
+
+    @Inject
+    lateinit var portProvider: PortProvider
 
     private val newAddresses: ArrayList<InetAddress> = ArrayList()
 
@@ -50,7 +52,7 @@ class NetworkMessagingService : LifecycleService() {
     private val runnable = Runnable {
         var socket: Socket? = null
         try {
-            serverSocket = ServerSocket(PORT)
+            serverSocket = ServerSocket(portProvider.getMessageListeningPort())
             while (working.get()) {
                 if (serverSocket != null) {
                     socket = serverSocket!!.accept()
@@ -134,6 +136,7 @@ class NetworkMessagingService : LifecycleService() {
 
     private fun requestCall(contact: Contact) {
         thread(start = true) {
+            Log.e(TAG, "request call start:${contact.name} / ${contact.address.hostName}")
             makeRequest(
                 address = contact.address,
                 request = START_CALL,
@@ -188,7 +191,7 @@ class NetworkMessagingService : LifecycleService() {
 
         val contactSocket = Socket(
             address,
-            PORT
+            portProvider.getMessageBroadcastPort()
         )
 
         val bufferOutput = DataOutputStream(

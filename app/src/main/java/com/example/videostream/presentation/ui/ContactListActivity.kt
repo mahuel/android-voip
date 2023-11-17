@@ -98,9 +98,9 @@ class ContactListActivity : AppCompatActivity() {
 
     private fun getContactListListener() = object : ContactListAdapterListener {
         override fun onCallPressed(contact: Contact) {
+            callViewModel.outgoingCall(contact.address)
             CallActivity.start(
                 activity = this@ContactListActivity,
-                contact = contact,
                 answerCall = false
             )
         }

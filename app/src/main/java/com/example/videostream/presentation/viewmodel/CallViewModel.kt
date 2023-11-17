@@ -56,8 +56,8 @@ class CallViewModel @Inject constructor(
         startCallService()
     }
 
-    fun connectCall(address: InetAddress) {
-        callRepository.connectCall(address)
+    fun connectCall() {
+        callRepository.connectCall()
     }
 
     fun getCallStatus(): LiveData<CallStatus> {

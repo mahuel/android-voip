@@ -6,30 +6,25 @@ import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import com.example.videostream.R
 import com.example.videostream.databinding.ActivityCallBinding
 import com.example.videostream.domain.model.CallState
-import com.example.videostream.domain.model.Contact
 import com.example.videostream.presentation.viewmodel.CallViewModel
 import com.example.videostream.utils.makeToast
 import dagger.hilt.android.AndroidEntryPoint
-import java.net.InetAddress
 
 @AndroidEntryPoint
 class CallActivity : AppCompatActivity() {
     companion object {
-        const val NAME_EXTRA = "NAME_EXTRA"
-        const val ADDRESS_EXTRA = "ADDRESS_EXTRA"
         const val ANSWER_EXTRA = "ANSWER_EXTRA"
-        fun start(activity: AppCompatActivity, contact: Contact, answerCall: Boolean) {
+        fun start(activity: AppCompatActivity, answerCall: Boolean) {
             val intent = Intent(
                 activity,
                 CallActivity::class.java
             )
 
             Bundle().apply {
-                putString(NAME_EXTRA, contact.name)
-                putString(ADDRESS_EXTRA, contact.address.hostAddress)
                 putBoolean(ANSWER_EXTRA, answerCall)
                 intent.putExtras(this)
             }
@@ -39,14 +34,6 @@ class CallActivity : AppCompatActivity() {
     }
 
     private val callViewModel: CallViewModel by viewModels()
-
-    private val name: String by lazy {
-        intent?.extras?.getString(NAME_EXTRA, "") ?: ""
-    }
-
-    private val address: String by lazy {
-        intent?.extras?.getString(ADDRESS_EXTRA, "") ?: ""
-    }
 
     private val answer: Boolean by lazy {
         intent?.extras?.getBoolean(ANSWER_EXTRA) ?: false
@@ -58,14 +45,14 @@ class CallActivity : AppCompatActivity() {
         val binding: ActivityCallBinding = ActivityCallBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        Log.d("TEST123", "name:$name")
-        Log.d("TEST123", "address:$address")
         Log.d("TEST123", "answer:$answer")
 
         callViewModel.getCallStatus().observe(this) {
             when (it.status) {
                 CallState.STARTED -> {
-                    binding.callStatusTextView.text = name
+                    binding.callStatusTextView.text = it.contact.name
+                    binding.muteMicBtn.isVisible = true
+                    binding.callStartBtn.isVisible = false
                 }
 
                 CallState.STOPPED -> {
@@ -74,23 +61,25 @@ class CallActivity : AppCompatActivity() {
                 }
 
                 CallState.INCOMING -> {
-                    binding.callStatusTextView.text = getString(R.string.status_incoming, name)
+                    binding.callStatusTextView.text = getString(R.string.status_incoming, it.contact.name)
+                    binding.muteMicBtn.isVisible = false
+                    binding.callStartBtn.isVisible = true
                 }
 
                 CallState.OUTGOING -> {
-                    binding.callStatusTextView.text = getString(R.string.status_outgoing, name)
+                    binding.callStatusTextView.text = getString(R.string.status_outgoing, it.contact.name)
+                    binding.muteMicBtn.isVisible = true
+                    binding.callStartBtn.isVisible = false
                 }
             }
         }
 
         if (answer) {
-            callViewModel.connectCall(
-                InetAddress.getByName(address)
-            )
-        } else {
-            callViewModel.outgoingCall(
-                InetAddress.getByName(address)
-            )
+            startIncomingCall()
+        }
+
+        binding.callStartBtn.setOnClickListener {
+            startIncomingCall()
         }
 
         binding.muteMicBtn.setOnClickListener {
@@ -110,6 +99,10 @@ class CallActivity : AppCompatActivity() {
         binding.callEndBtn.setOnClickListener {
             callViewModel.stopCall()
         }
+    }
+
+    private fun startIncomingCall() {
+        callViewModel.connectCall()
     }
 
     private val requestPermissionLauncher =

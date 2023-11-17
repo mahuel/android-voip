@@ -17,7 +17,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.example.videostream.runner.TestRunner"
         vectorDrawables {
             useSupportLibrary true
         }
@@ -62,12 +62,11 @@ dependencies {
     implementation "androidx.fragment:fragment-ktx:1.6.1"
 
     androidTestImplementation "org.mockito:mockito-android:5.0.0"
-    androidTestImplementation "com.google.dagger:hilt-android-testing:2.48.1"
-    // testImplementation "com.google.dagger:hilt-android-testing:2.48.1"
-
 
     implementation "com.google.dagger:hilt-android:2.48.1"
     kapt "com.google.dagger:hilt-compiler:2.48.1"
+    androidTestImplementation "com.google.dagger:hilt-android-testing:2.48.1"
+    kaptAndroidTest "com.google.dagger:hilt-android-testing:2.48.1"
 
     implementation "androidx.lifecycle:lifecycle-service:2.6.2"
 

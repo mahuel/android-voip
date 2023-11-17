@@ -1,5 +1,6 @@
 package com.example.videostream.domain.repository
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.videostream.domain.model.CallState
@@ -125,6 +126,7 @@ class CallRepository @Inject constructor(
     fun connectCallRequested(clientAddress: InetAddress) {
         callStatus.value?.let {
             if (clientAddress == it.contact.address) {
+                Log.e("TEST123", "connectCallRequested")
                 callStatus.postValue(
                     CallStatus(
                         status = CallState.STARTED,
@@ -136,10 +138,10 @@ class CallRepository @Inject constructor(
     }
 
     // connect incoming
-    fun connectCall(address: InetAddress) {
+    fun connectCall() {
         callStatus.value?.let {
-            if (address == it.contact.address) {
-                connectCallLiveData.postValue(address)
+            if (it.status == CallState.INCOMING) {
+                connectCallLiveData.postValue(it.contact.address)
                 callStatus.postValue(
                     CallStatus(
                         status = CallState.STARTED,

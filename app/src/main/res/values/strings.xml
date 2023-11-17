@@ -3,4 +3,7 @@
     <string name="add_contact_instructions">Have another app instance scan your QR code, or you can scan theirs.\nOnly one scan is needed.</string>
     <string name="status_incoming">%1$s is calling..</string>
     <string name="status_outgoing">Calling %1$s</string>
+    <string name="mute_button_description">Mute Button</string>
+    <string name="answer_button_description">Answer Button</string>
+    <string name="reject_button_description">Reject Button</string>
 </resources>

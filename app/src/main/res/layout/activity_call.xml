@@ -22,7 +22,19 @@
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_margin="30dp"
+        android:contentDescription="@string/mute_button_description"
         android:src="@drawable/ic_mic_off"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/callStartBtn"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_margin="30dp"
+        android:background="@color/start_call"
+        android:contentDescription="@string/answer_button_description"
+        android:src="@drawable/ic_call"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -32,6 +44,7 @@
         android:layout_height="100dp"
         android:layout_margin="30dp"
         android:background="@color/end_call"
+        android:contentDescription="@string/reject_button_description"
         android:src="@drawable/ic_call_end"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
