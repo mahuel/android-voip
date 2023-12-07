@@ -29,7 +29,7 @@ class TcpMessageHandler(
             try {
                 if (dataInputStream.available() > 0) {
                     val requestInput = dataInputStream.readUTF()
-                    Log.e("TEST123", "requestInput:$requestInput")
+                    Log.d("TEST123", "requestInput:$requestInput")
                     if (requestInput.startsWith(GET_CONTACT_DETAILS)) {
                         contactRepository.detailsRequest()?.let {
                             dataOutputStream.writeUTF(it)
